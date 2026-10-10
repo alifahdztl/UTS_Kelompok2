@@ -6,6 +6,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import customtkinter as ctk
 from tkinter import ttk, messagebox
+from views.pembayaran_view import PembayaranView
 
 ctk.set_appearance_mode("Dark")
 
@@ -14,12 +15,13 @@ class OrderStatusView(ctk.CTk):
     def __init__(self, order_data=None, pelanggan_data=None):
         super().__init__()
 
+        # Data dikosongkan secara default, menunggu kiriman data dari login / menu
         self.order_data = order_data or {}
-        self.pelanggan_data = pelanggan_data or {"nama_pelanggan": "Pelanggan"}
+        self.pelanggan_data = pelanggan_data or {}
 
         # Konfigurasi Window Informasi Pesanan
-        self.title("Warm Coffee - Informasi Pesanan")
-        self.geometry("820x480")
+        self.title("Warm Coffee - Informasi & Status Pesanan")
+        self.geometry("820x540")
         self.resizable(False, False)
         self.configure(fg_color="#231915")
 
@@ -75,18 +77,24 @@ class OrderStatusView(ctk.CTk):
 
         self.tree_info.pack(fill="both", expand=True, padx=20, pady=10)
 
-        # Format daftar menu yang dipesan dari keranjang
+        # Format daftar menu yang dipesan dari keranjang (jika kosong, tampilkan '-')
         menu_items = self.order_data.get("items", [])
         menu_text_list = [f"{item['nama_menu']} ({item['qty']}x)" for item in menu_items]
         daftar_menu_str = ", ".join(menu_text_list) if menu_text_list else "-"
 
         # Ambil status awal pesanan
         self.current_status = self.order_data.get("status_pesanan", "Pending")
+        
+        # Ambil data nama dan antrian secara dinamis
+        nomor_antrian = self.order_data.get("nomor_antrian", "-")
+        nama_pelanggan = self.pelanggan_data.get("nama_pelanggan", "-")
+        if nama_pelanggan != "-":
+            nama_pelanggan = nama_pelanggan.title()
 
         # Memasukkan data ke tabel
         self.tree_info.insert("", "end", iid="row_1", values=(
-            self.order_data.get("nomor_antrian", "A-001"),
-            self.pelanggan_data.get("nama_pelanggan", "Pelanggan").title(),
+            nomor_antrian,
+            nama_pelanggan,
             daftar_menu_str,
             self.current_status
         ))
@@ -103,7 +111,7 @@ class OrderStatusView(ctk.CTk):
         )
         self.lbl_select_status.pack(side="left", padx=(0, 10))
 
-        # Dropdown pilihan status (Pending, Diproses, Selesai)
+        # Dropdown pilihan status
         self.combo_status = ctk.CTkOptionMenu(
             self.update_frame,
             values=["Pending", "Diproses", "Selesai"],
@@ -113,7 +121,7 @@ class OrderStatusView(ctk.CTk):
             text_color="#F5E6D3",
             width=150
         )
-        self.combo_status.set(self.current_status)  # Set pilihan default sesuai status saat ini
+        self.combo_status.set(self.current_status)
         self.combo_status.pack(side="left", padx=(0, 15))
 
         # Tombol Simpan Perubahan Status
@@ -128,6 +136,18 @@ class OrderStatusView(ctk.CTk):
         )
         self.btn_update.pack(side="left")
 
+        # ----------------- TOMBOL BAYAR PESANAN -----------------
+        self.btn_bayar = ctk.CTkButton(
+            self.main_card,
+            text="BAYAR PESANAN",
+            font=ctk.CTkFont(size=13, weight="bold"),
+            fg_color="#27AE60",
+            hover_color="#1E8449",
+            height=38,
+            command=self.buka_halaman_pembayaran
+        )
+        self.btn_bayar.pack(fill="x", padx=20, pady=(5, 5))
+
         # ----------------- TOMBOL TUTUP / KEMBALI -----------------
         self.btn_close = ctk.CTkButton(
             self.main_card,
@@ -138,23 +158,31 @@ class OrderStatusView(ctk.CTk):
             height=38,
             command=self.destroy
         )
-        self.btn_close.pack(pady=(10, 15))
+        self.btn_close.pack(pady=(5, 15), padx=20, fill="x")
 
     def simpan_perubahan_status(self):
-        """Memperbarui status pesanan secara lokal di GUI (Tanpa Database & Tanpa Controller)"""
+        """Memperbarui status pesanan secara lokal di GUI"""
         status_baru = self.combo_status.get()
 
-        # Update nilai status di tabel Treeview GUI secara lokal
         item_vals = list(self.tree_info.item("row_1", "values"))
         item_vals[3] = status_baru
         self.tree_info.item("row_1", values=item_vals)
 
-        # Update data internal
         self.order_data["status_pesanan"] = status_baru
+        messagebox.showinfo("Informasi", f"Status pesanan berhasil diubah secara lokal menjadi '{status_baru}'!")
 
-        messagebox.showinfo("Informasi", f"Status pesanan berhasil diubah secara lokal menjadi '{status_baru}'!\n(Tidak terhubung ke database/controller)")
+    def buka_halaman_pembayaran(self):
+        """Membuka halaman PembayaranView dan meneruskan data pesanan & pelanggan"""
+        if not self.order_data:
+            messagebox.showwarning("Peringatan", "Data pesanan masih kosong!")
+            return
+            
+        self.destroy()
+        app_pembayaran = PembayaranView(order_data=self.order_data, pelanggan_data=self.pelanggan_data)
+        app_pembayaran.mainloop()
 
 
 if __name__ == "__main__":
+    # Dikosongkan saat dijalankan mandiri
     app = OrderStatusView()
     app.mainloop()
