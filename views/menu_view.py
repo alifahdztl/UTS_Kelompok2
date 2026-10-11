@@ -6,7 +6,8 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import customtkinter as ctk
 from tkinter import ttk, messagebox
-from views.orderstatus_view import OrderStatusView  # Import OrderStatusView statis
+from controllers.menu_controller import MenuController  # Pastikan file controller diimport sesuai jalurnya
+from views.orderstatus_view import OrderStatusView
 
 ctk.set_appearance_mode("Dark")
 
@@ -15,7 +16,10 @@ class MenuView(ctk.CTk):
     def __init__(self, pelanggan_data=None):
         super().__init__()
 
-        # Data pelanggan dummy (Tanpa Controller & Tanpa Database)
+        # Inisialisasi Controller
+        self.controller = MenuController()
+
+        # Data pelanggan (mengambil data asli atau fallback default)
         self.pelanggan_data = pelanggan_data or {"id_pelanggan": 1, "nama_pelanggan": "Pelanggan"}
 
         # Konfigurasi Window Utama
@@ -133,28 +137,26 @@ class MenuView(ctk.CTk):
         )
         self.btn_checkout.pack(fill="x", padx=10, pady=(5, 15))
 
-        # Load Menu Dummy Lokal
+        # Load Menu dari Database via Controller
         self.muat_data_menu()
 
     def muat_data_menu(self):
-        """Memuat data menu dummy secara lokal (Tanpa Controller & Tanpa Database)"""
+        """Memuat data menu dari database melalui MenuController"""
         for row in self.tree.get_children():
             self.tree.delete(row)
 
-        # Data menu statis / dummy lokal
-        daftar_menu_dummy = [
-            {"id_menu": 1, "nama_menu": "Espresso", "harga": 18000, "stok": 50},
-            {"id_menu": 2, "nama_menu": "Americano", "harga": 22000, "stok": 30},
-            {"id_menu": 3, "nama_menu": "Caffe Latte", "harga": 28000, "stok": 40}
-        ]
+        daftar_menu = self.controller.ambil_semua_menu()
 
-        for item in daftar_menu_dummy:
+        for item in daftar_menu:
             self.tree.insert("", "end", values=(
-                item['id_menu'], item['nama_menu'], f"Rp {float(item['harga']):,.0f}", item['stok']
+                item['id_menu'], 
+                item['nama_menu'], 
+                f"Rp {float(item['harga']):,.0f}", 
+                item['stok']
             ))
 
     def tambah_ke_keranjang(self):
-        """Memindahkan item yang dipilih ke tabel keranjang secara lokal"""
+        """Memindahkan item yang dipilih ke tabel keranjang"""
         selected_item = self.tree.selection()
         if not selected_item:
             messagebox.showwarning("Peringatan", "Pilih menu dari tabel sebelah kiri terlebih dahulu!")
@@ -210,28 +212,23 @@ class MenuView(ctk.CTk):
         self.lbl_total.configure(text=f"Total: Rp {total:,.0f}")
 
     def proses_checkout(self):
-        """Checkout simulasi lokal (Tanpa Controller & Tanpa Database)"""
+        """Memproses checkout pesanan menggunakan MenuController ke database"""
         if not self.keranjang:
             messagebox.showwarning("Keranjang Kosong", "Pilih menu dan masukkan ke keranjang dulu!")
             return
 
-        total_harga = sum(item['subtotal'] for item in self.keranjang)
-        order_data = {
-            "id_pesanan": 999,
-            "nomor_antrian": "A-999",
-            "status_pesanan": "Pending",
-            "total_harga": total_harga,
-            "items": list(self.keranjang)
-        }
-
-        messagebox.showinfo("Informasi", "Checkout berhasil secara lokal!\n(Tidak terhubung ke database atau controller)")
+        id_pelanggan = self.pelanggan_data.get("id_pelanggan", 1)
         
-        # Tutup window menu
-        self.destroy()
+        # Panggil fungsi proses checkout dari controller
+        order_data = self.controller.proses_pesanan_checkout(id_pelanggan, self.keranjang)
 
-        # Buka OrderStatusView lokal
-        app_status = OrderStatusView(order_data=order_data, pelanggan_data=self.pelanggan_data)
-        app_status.mainloop()
+        if order_data:
+            # Tutup window menu
+            self.destroy()
+
+            # Buka OrderStatusView dengan data dari database
+            app_status = OrderStatusView(order_data=order_data, pelanggan_data=self.pelanggan_data)
+            app_status.mainloop()
 
 
 if __name__ == "__main__":
