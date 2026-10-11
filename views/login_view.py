@@ -6,13 +6,18 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import customtkinter as ctk
 from tkinter import messagebox
+from config.database import Database
+from controllers.login_controller import LoginController
+from views.menu_view import MenuView  # Ditambahkan untuk membuka halaman menu setelah login
 
 ctk.set_appearance_mode("Dark")
-
 
 class LoginView(ctk.CTk):
     def __init__(self):
         super().__init__()
+
+        # Inisialisasi Controller
+        self.controller = LoginController()
 
         # Konfigurasi Window Login
         self.title("Warm Coffee - Login Pelanggan")
@@ -101,17 +106,29 @@ class LoginView(ctk.CTk):
         self.btn_login.pack(pady=(0, 20))
 
     def handle_login(self):
-        """Hanya mengambil input lokal tanpa controller dan tanpa database"""
+        """Mengambil input dari user dan meneruskannya ke LoginController"""
         nama = self.entry_nama.get().strip()
         email = self.entry_email.get().strip()
         telepon = self.entry_telepon.get().strip()
 
         if not nama or not email or not telepon:
-            messagebox.showwarning("Peringatan", "Semua kolom wajib diisi!")
+            messagebox.showwarning("Peringatan", "Semua kolom data member harus diisi!")
             return
 
-        # Pesan dummy saat tombol diklik
-        messagebox.showinf("Informasi", f"Tombol Masuk diklik oleh: {nama}\n(Tampilan mandiri tanpa controller/database)")
+        # Panggil method verifikasi dari controller
+        hasil_login = self.controller.verifikasi_login(nama, email, telepon)
+
+        if hasil_login:
+            messagebox.showinfo("Sukses", f"Selamat datang, {hasil_login.get('nama_pelanggan', nama)}!")
+            
+            # 1. Tutup jendela login
+            self.destroy()
+
+            # 2. Buka halaman MenuView dan kirim data pelanggan agar tampil di header menu
+            app_menu = MenuView(pelanggan_data=hasil_login)
+            app_menu.mainloop()
+        else:
+            messagebox.showerror("Error", "Data pelanggan tidak ditemukan atau salah!")
 
 
 if __name__ == "__main__":
