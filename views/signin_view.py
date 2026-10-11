@@ -5,7 +5,7 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import customtkinter as ctk
-from tkinter import messagebox
+from controllers.signin_controller import SigninController
 
 ctk.set_appearance_mode("Dark")
 
@@ -13,6 +13,9 @@ ctk.set_appearance_mode("Dark")
 class SigninPelangganView(ctk.CTk):
     def __init__(self):
         super().__init__()
+
+        # Inisialisasi Controller
+        self.controller = SigninController()
 
         self.title("Warm Coffee - Sign In Pelanggan")
         self.geometry("450x580")
@@ -59,21 +62,20 @@ class SigninPelangganView(ctk.CTk):
         self.btn_kembali.pack(pady=5)
 
     def proses_signin(self):
-        """Hanya mengambil input lokal tanpa controller dan tanpa database"""
+        """Mengambil input UI dan mengirimkannya ke SigninController"""
         nama = self.entry_nama.get().strip()
         email = self.entry_email.get().strip()
         telepon = self.entry_telepon.get().strip()
 
-        if not nama or not email or not telepon:
-            messagebox.showwarning("Peringatan", "Nama, Email, dan Nomor Telepon wajib diisi!")
-            return
+        # Panggil method dari controller
+        sukses = self.controller.registrasi_pelanggan(nama, email, telepon)
 
-        # Pesan simulasi lokal (tidak menyimpan ke database)
-        messagebox.showinfo("Informasi", f"Registrasi simulasi berhasil untuk: {nama}\n(Tidak terhubung ke controller/database)")
-        self.buka_login()
+        if sukses:
+            # Jika registrasi berhasil, otomatis kembali ke halaman login
+            self.buka_login()
 
     def buka_login(self):
-        """Menutup jendela sign in dan membuka kembali jendela login statis"""
+        """Menutup jendela sign in dan membuka kembali jendela login"""
         self.destroy()
         from views.login_view import LoginView
         app_login = LoginView()
