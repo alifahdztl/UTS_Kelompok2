@@ -14,8 +14,8 @@ class KasirOrderStatusView(ctk.CTk):
     def __init__(self, order_data=None, pelanggan_data=None):
         super().__init__()
 
-        self.order_data = {}
-        self.pelanggan_data = {}
+        self.order_data = order_data or {}
+        self.pelanggan_data = pelanggan_data or {}
 
         self.title("Warm Coffee - Order Status Kasir / Barista")
         self.geometry("860x540")
@@ -72,6 +72,9 @@ class KasirOrderStatusView(ctk.CTk):
 
         self.tree_info.pack(fill="both", expand=True, padx=20, pady=10)
 
+        # Auto-load data saat panel dibuka
+        self.load_data_from_db()
+
         # Kontrol Pengubahan Status Pesanan
         self.control_frame = ctk.CTkFrame(self.main_card, fg_color="transparent")
         self.control_frame.pack(fill="x", padx=20, pady=10)
@@ -126,9 +129,6 @@ class KasirOrderStatusView(ctk.CTk):
         )
         self.btn_close.pack(pady=(5, 15), padx=20, fill="x")
 
-        # Bersihkan tampilan tabel saat awal dibuka
-        self.kosongkan_tabel()
-
     def get_connection(self):
         try:
             return mysql.connector.connect(
@@ -141,15 +141,10 @@ class KasirOrderStatusView(ctk.CTk):
             print("Error koneksi database kasir:", e)
             return None
 
-    def kosongkan_tabel(self):
-        """Mengosongkan isi tabel secara total saat pertama dibuka"""
+    def load_data_from_db(self):
+        """Mengambil data pesanan terbaru dari database MySQL"""
         for row in self.tree_info.get_children():
             self.tree_info.delete(row)
-        self.order_data = {}
-
-    def load_data_from_db(self):
-        """Hanya menarik data jika ada pesanan baru yang dikirim"""
-        self.kosongkan_tabel()
 
         try:
             conn = self.get_connection()
@@ -157,12 +152,10 @@ class KasirOrderStatusView(ctk.CTk):
                 return
             cursor = conn.cursor(dictionary=True)
 
-            # Ambil pesanan terbaru yang statusnya masih aktif
             cursor.execute("""
                 SELECT p.*, pl.nama_pelanggan 
                 FROM pemesanan p 
                 LEFT JOIN pelanggan pl ON p.id_pelanggan = pl.id_pelanggan 
-                WHERE p.status_pesanan IN ('Pending', 'Diproses')
                 ORDER BY p.id_pesanan DESC LIMIT 1
             """)
             order = cursor.fetchone()
@@ -201,7 +194,7 @@ class KasirOrderStatusView(ctk.CTk):
 
     def update_status_pesanan(self):
         if not self.order_data or "id_pesanan" not in self.order_data:
-            messagebox.showwarning("Peringatan", "Belum ada data pesanan yang aktif di panel!")
+            messagebox.showwarning("Peringatan", "Belum ada data pesanan yang masuk!")
             return
 
         status_baru = self.combo_status.get()
@@ -223,12 +216,8 @@ class KasirOrderStatusView(ctk.CTk):
             cursor.close()
             conn.close()
 
-            if status_baru == "Selesai":
-                self.kosongkan_tabel()
-                messagebox.showinfo("Sukses", "Pesanan telah selesai dan dibersihkan dari panel aktif.")
-            else:
-                self.load_data_from_db()
-                messagebox.showinfo("Sukses", f"Status pesanan berhasil diubah menjadi: {status_baru}")
+            self.load_data_from_db()
+            messagebox.showinfo("Sukses", f"Status pesanan berhasil diubah menjadi: {status_baru}")
         except Exception as e:
             messagebox.showerror("Error", f"Gagal update database: {e}")
 
