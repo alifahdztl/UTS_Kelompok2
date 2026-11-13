@@ -17,33 +17,17 @@ def test_create_menu_berhasil():
     mock_cursor = MagicMock()
     model.conn.cursor.return_value = mock_cursor
 
-    # 3. Menyiapkan data dummy sesuai tabel menu Warm Coffee Anda
-    mock_cursor.fetchall.return_value = [
-        {"id_menu": 1, "nama_menu": "Espresso", "kategori": "Kopi", "harga": 18000.00, "stok": 37, "status_menu": "Tersedia"},
-        {"id_menu": 2, "nama_menu": "Americano", "kategori": "Kopi", "harga": 22000.00, "stok": 39, "status_menu": "Tersedia"}
-    ]
-
-    # 4. Melakukan eksekusi fungsi get_all_menu
-    hasil = model.get_all_menu()
-
-    # 5. Verifikasi hasil pengujian (Assertion)
-    assert len(hasil) == 2
-    assert hasil[0]["nama_menu"] == "Espresso"
-    assert hasil[1]["harga"] == 22000.00
-
-    # Memastikan kueri/cursor execute benar-benar dipanggil
     # Melakukan eksekusi fungsi create_menu sesuai kolom database (nama_menu, kategori, harga, stok, status_menu)
-    hasil = model.create_menu("Kopi Susu Gula Aren", "Minuman", 18000.00, 67, "Tersedia")
+    hasil = model.create_menu("Kopi Susu Gula Aren", "Minuman", 18000.00, 47, "Tersedia")
 
     # Memverifikasi apakah fungsi mengembalikan nilai True
     assert hasil is True
 
-    # Memverifikasi apakah cursor.execute benar-benar dipanggil
+    # Memverifikasi apakah cursor.execute benar-benar dipanggil sekali
     mock_cursor.execute.assert_called_once()
 
     # Memverifikasi apakah perintah commit (simpan) dipanggil
     model.conn.commit.assert_called_once()
-
 
 def test_get_all_menu():
     # Menginisialisasi Model Menu untuk menguji pengambilan data
