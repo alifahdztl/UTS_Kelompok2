@@ -19,6 +19,7 @@ class SigninPelangganView(ctk.CTk):
 
         self.title("Warm Coffee - Sign In Pelanggan")
         self.geometry("450x580") 
+        self.geometry("450x650")
         self.resizable(False, False)
         self.configure(fg_color="#231915")
 
@@ -49,6 +50,9 @@ class SigninPelangganView(ctk.CTk):
         self.entry_telepon = ctk.CTkEntry(placeholder_text="Nomor Telepon", **entry_kwargs)
         self.entry_telepon.pack(pady=8)
 
+        self.entry_password = ctk.CTkEntry(placeholder_text="Password (min. 6 karakter)", show="*", **entry_kwargs)
+        self.entry_password.pack(pady=8)
+
         self.btn_signin = ctk.CTkButton(
             self.main_frame, text="DAFTAR", font=ctk.CTkFont(size=13, weight="bold"),
             width=300, height=40, fg_color="#965829", hover_color="#7A451E", text_color="#FFFFFF", command=self.proses_signin
@@ -66,9 +70,10 @@ class SigninPelangganView(ctk.CTk):
         nama = self.entry_nama.get().strip()
         email = self.entry_email.get().strip()
         telepon = self.entry_telepon.get().strip()
+        password = self.entry_password.get()
 
         # Panggil method dari controller
-        sukses = self.controller.registrasi_pelanggan(nama, email, telepon)
+        sukses = self.controller.registrasi_pelanggan(nama, email, telepon, password)
 
         if sukses:
             # Jika registrasi berhasil, otomatis kembali ke halaman login

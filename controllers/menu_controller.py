@@ -1,105 +1,130 @@
 from tkinter import messagebox
-from config.database import Database
+from models.menu_model import MenuModel
+from models.pemesanan_model import PemesananModel
+
 
 class MenuController:
     def __init__(self):
-        self.db = Database()
+        self.menu_model = MenuModel()
+        self.pemesanan_model = PemesananModel()
 
     def ambil_semua_menu(self):
         """
-        Mengambil seluruh daftar menu yang tersedia dari database secara berurutan.
+        Mengambil seluruh daftar menu dari Model.
         Mengembalikan list dictionary berisi data menu, atau list kosong jika gagal.
         """
-        conn = self.db.get_connection()
-        if not conn:
+        if not self.menu_model.conn:
             messagebox.showerror("Error", "Gagal terhubung ke database!")
             return []
 
         try:
-            cursor = conn.cursor(dictionary=True)
-            cursor.execute("SELECT * FROM menu ORDER BY id_menu ASC")
-            daftar_menu = cursor.fetchall()
-            
-            cursor.close()
-            conn.close()
-            return daftar_menu
-
+            return self.menu_model.get_all_menu()
         except Exception as e:
             messagebox.showerror("Error", f"Terjadi kesalahan saat memuat menu: {e}")
             return []
 
-    def buat_nomor_antrian(self, cursor):
-        """
-        Menghasilkan nomor antrian otomatis dengan format A-001 berdasarkan urutan transaksi harian.
-        """
-        cursor.execute("SELECT COUNT(*) FROM pemesanan WHERE DATE(tanggal_pesanan) = CURDATE()")
-        jumlah_hari_ini = cursor.fetchone()[0]
-        nomor_baru = jumlah_hari_ini + 1
+    def buat_nomor_antrian(self):
+        """Nomor antrian otomatis format A-001 berdasarkan jumlah transaksi hari ini."""
+        nomor_baru = self.pemesanan_model.count_pesanan_hari_ini() + 1
         return f"A-{nomor_baru:03d}"
 
     def proses_pesanan_checkout(self, id_pelanggan, keranjang):
         """
-        Memproses penyimpanan pesanan ke tabel pemesanan dan detail_pesanan,
-        serta melakukan pengurangan stok menu di database secara aman.
+        Menyimpan pesanan (pemesanan + detail_pesanan + pengurangan stok) lewat Model.
         Mengembalikan dictionary data transaksi jika sukses, atau None jika gagal.
         """
         if not keranjang:
             messagebox.showwarning("Keranjang Kosong", "Pilih menu dan masukkan ke keranjang dulu!")
             return None
 
-        conn = self.db.get_connection()
-        if not conn:
+        if not self.pemesanan_model.conn:
             messagebox.showerror("Error Koneksi", "Tidak dapat terhubung ke database.")
             return None
 
-        cursor = None
-        try:
-            cursor = conn.cursor()
-            total_harga = sum(item['subtotal'] for item in keranjang)
+        total_harga = sum(item["subtotal"] for item in keranjang)
+        nomor_antrian = self.buat_nomor_antrian()
+        status_pesanan = "Pending"
 
-            nomor_antrian = self.buat_nomor_antrian(cursor)
-            status_pesanan = "Pending"
+        id_pesanan = self.pemesanan_model.simpan_pesanan_lengkap(
+            id_pelanggan, nomor_antrian, total_harga, status_pesanan, keranjang
+        )
 
-            # 1. Insert transaksi pemesanan
-            cursor.execute(
-                "INSERT INTO pemesanan (id_pelanggan, nomor_antrian, total_harga, status_pesanan) VALUES (%s, %s, %s, %s)",
-                (id_pelanggan, nomor_antrian, total_harga, status_pesanan)
-            )
-
-            id_pesanan = cursor.lastrowid
-
-            # 2. Insert detail pesanan & potong stok
-            for item in keranjang:
-                cursor.execute(
-                    "INSERT INTO detail_pesanan (id_pesanan, id_menu, jumlah, subtotal) VALUES (%s, %s, %s, %s)",
-                    (id_pesanan, item['id_menu'], item['qty'], item['subtotal'])
-                )
-
-                cursor.execute(
-                    "UPDATE menu SET stok = stok - %s WHERE id_menu = %s AND stok >= %s",
-                    (item['qty'], item['id_menu'], item['qty'])
-                )
-                if cursor.rowcount == 0:
-                    raise Exception(f"Stok '{item['nama_menu']}' tidak mencukupi atau sudah berubah.")
-
-            conn.commit()
-            messagebox.showinfo("Sukses", "Pesanan berhasil dibuat!")
-
-            # Kemas data ringkasan transaksi
-            order_data = {
-                "id_pesanan": id_pesanan,
-                "nomor_antrian": nomor_antrian,
-                "status_pesanan": status_pesanan,
-                "total_harga": total_harga,
-                "items": list(keranjang)
-            }
-            return order_data
-
-        except Exception as e:
-            conn.rollback()
-            messagebox.showerror("Error Checkout", f"Gagal memproses pesanan: {e}")
+        if id_pesanan is None:
+            alasan = self.pemesanan_model.last_error or "terjadi kesalahan database."
+            messagebox.showerror("Error Checkout", f"Gagal memproses pesanan: {alasan}")
             return None
-        finally:
-            if cursor:
-                cursor.close()
-            conn.close()
+
+        messagebox.showinfo("Sukses", "Pesanan berhasil dibuat!")
+        return {
+            "id_pesanan": id_pesanan,
+            "nomor_antrian": nomor_antrian,
+            "status_pesanan": status_pesanan,
+            "total_harga": total_harga,
+            "items": list(keranjang),
+        }
+    # ----------------- KELOLA MENU & STOK (KASIR / BARISTA) -----------------
+    def _validasi_data_menu(self, nama_menu, kategori, harga, stok):
+        """
+        Memvalidasi isian form menu.
+        Mengembalikan (nama_menu, kategori, harga, stok) yang sudah bersih, atau None jika tidak valid.
+        """
+        nama_menu = (nama_menu or "").strip()
+        kategori = (kategori or "").strip()
+        harga = str(harga).strip()
+        stok = str(stok).strip()
+
+        if not nama_menu or not kategori:
+            messagebox.showwarning("Peringatan", "Nama menu dan kategori harus diisi!")
+            return None
+
+        if not harga.isdigit():
+            messagebox.showwarning("Peringatan", "Harga harus berupa angka bulat tanpa titik/koma (contoh: 18000)!")
+            return None
+
+        if not stok.isdigit():
+            messagebox.showwarning("Peringatan", "Stok harus berupa bilangan bulat 0 atau lebih!")
+            return None
+
+        return nama_menu, kategori, int(harga), int(stok)
+
+    def ubah_menu(self, id_menu, nama_menu, kategori, harga, stok, status_menu):
+        """Memperbarui data menu (nama, kategori, harga, stok, status). Mengembalikan True jika berhasil."""
+        if id_menu is None:
+            messagebox.showwarning("Peringatan", "Pilih menu dari tabel terlebih dahulu!")
+            return False
+
+        data = self._validasi_data_menu(nama_menu, kategori, harga, stok)
+        if data is None:
+            return False
+        nama_menu, kategori, harga, stok = data
+
+        if not self.menu_model.conn:
+            messagebox.showerror("Error", "Gagal terhubung ke database!")
+            return False
+
+        try:
+            self.menu_model.update_menu(id_menu, nama_menu, kategori, harga, stok, status_menu)
+            messagebox.showinfo("Sukses", f"Menu '{nama_menu}' berhasil diperbarui!")
+            return True
+        except Exception as e:
+            messagebox.showerror("Error", f"Gagal memperbarui menu: {e}")
+            return False
+
+    def tambah_menu_baru(self, nama_menu, kategori, harga, stok, status_menu):
+        """Menambahkan menu baru ke database. Mengembalikan True jika berhasil."""
+        data = self._validasi_data_menu(nama_menu, kategori, harga, stok)
+        if data is None:
+            return False
+        nama_menu, kategori, harga, stok = data
+
+        if not self.menu_model.conn:
+            messagebox.showerror("Error", "Gagal terhubung ke database!")
+            return False
+
+        try:
+            self.menu_model.create_menu(nama_menu, kategori, harga, stok, status_menu)
+            messagebox.showinfo("Sukses", f"Menu '{nama_menu}' berhasil ditambahkan!")
+            return True
+        except Exception as e:
+            messagebox.showerror("Error", f"Gagal menambahkan menu: {e}")
+            return False

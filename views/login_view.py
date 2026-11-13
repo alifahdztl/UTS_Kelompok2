@@ -5,8 +5,6 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import customtkinter as ctk
-from tkinter import messagebox
-from config.database import Database
 from controllers.login_controller import LoginController
 from views.menu_view import MenuView  # Ditambahkan untuk membuka halaman menu setelah login
 
@@ -76,10 +74,10 @@ class LoginView(ctk.CTk):
         )
         self.entry_email.pack(pady=10)
 
-        # Input Nomor Telepon (Dengan bintang-bintang `show="*"`)
-        self.entry_telepon = ctk.CTkEntry(
+        # Input Password (disamarkan dengan bintang `show="*"`)
+        self.entry_password = ctk.CTkEntry(
             self.main_frame, 
-            placeholder_text="Nomor Telepon", 
+            placeholder_text="Password", 
             width=360, 
             height=45,
             fg_color="#1e1411", 
@@ -90,7 +88,7 @@ class LoginView(ctk.CTk):
             font=ctk.CTkFont(size=13),
             show="*"
         )
-        self.entry_telepon.pack(pady=(10, 30))
+        self.entry_password.pack(pady=(10, 30))
 
         # Tombol Masuk
         self.btn_login = ctk.CTkButton(
@@ -103,32 +101,43 @@ class LoginView(ctk.CTk):
             width=360,
             command=self.handle_login
         )
-        self.btn_login.pack(pady=(0, 20))
+        self.btn_login.pack(pady=(0, 15))
+
+        # Tombol menuju halaman registrasi
+        self.btn_to_signin = ctk.CTkButton(
+            self.main_frame,
+            text="Belum punya akun? Daftar",
+            font=ctk.CTkFont(size=11),
+            fg_color="transparent",
+            hover_color="#2b1f1a",
+            text_color="#F5E6D3",
+            command=self.buka_signin
+        )
+        self.btn_to_signin.pack(pady=5)
 
     def handle_login(self):
         """Mengambil input dari user dan meneruskannya ke LoginController"""
         nama = self.entry_nama.get().strip()
         email = self.entry_email.get().strip()
-        telepon = self.entry_telepon.get().strip()
+        password = self.entry_password.get()
 
-        if not nama or not email or not telepon:
-            messagebox.showwarning("Peringatan", "Semua kolom data member harus diisi!")
-            return
-
-        # Panggil method verifikasi dari controller
-        hasil_login = self.controller.verifikasi_login(nama, email, telepon)
+        # Controller memvalidasi input, memeriksa ke Model, dan menampilkan pesan
+        hasil_login = self.controller.verifikasi_login(nama, email, password)
 
         if hasil_login:
-            messagebox.showinfo("Sukses", f"Selamat datang, {hasil_login.get('nama_pelanggan', nama)}!")
-            
             # 1. Tutup jendela login
             self.destroy()
 
             # 2. Buka halaman MenuView dan kirim data pelanggan agar tampil di header menu
             app_menu = MenuView(pelanggan_data=hasil_login)
             app_menu.mainloop()
-        else:
-            messagebox.showerror("Error", "Data pelanggan tidak ditemukan atau salah!")
+
+    def buka_signin(self):
+        """Menutup jendela login dan membuka halaman registrasi pelanggan"""
+        self.destroy()
+        from views.signin_view import SigninPelangganView  # impor di sini agar tidak circular
+        app_signin = SigninPelangganView()
+        app_signin.mainloop()
 
 
 if __name__ == "__main__":

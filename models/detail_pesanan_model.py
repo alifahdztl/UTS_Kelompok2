@@ -26,3 +26,19 @@ class DetailPesananModel:
             cursor.close()
             return True
         return False
+
+    def get_by_pesanan(self, id_pesanan):
+        """Daftar menu yang dipesan pada satu pesanan (nama_menu, qty)."""
+        if self.conn:
+            cursor = self.conn.cursor(dictionary=True)
+            query = f"""
+                SELECT m.nama_menu, dp.jumlah AS qty
+                FROM {self.table_name} dp
+                JOIN menu m ON dp.id_menu = m.id_menu
+                WHERE dp.id_pesanan = %s
+            """
+            cursor.execute(query, (id_pesanan,))
+            result = cursor.fetchall()
+            cursor.close()
+            return result
+        return []

@@ -1,11 +1,9 @@
 import sys
 import os
-import importlib.util
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import customtkinter as ctk
-from tkinter import messagebox
 from controllers.kasir_barista_controller import KasirBaristaController
 
 ctk.set_appearance_mode("Dark")
@@ -58,8 +56,8 @@ class LoginKasirBaristaView(ctk.CTk):
         self.entry_email = ctk.CTkEntry(placeholder_text="Email", **entry_kwargs)
         self.entry_email.pack(pady=10)
 
-        self.entry_telepon = ctk.CTkEntry(placeholder_text="Nomor Telepon", show="*", **entry_kwargs)
-        self.entry_telepon.pack(pady=(10, 30))
+        self.entry_password = ctk.CTkEntry(placeholder_text="Password", show="*", **entry_kwargs)
+        self.entry_password.pack(pady=(10, 30))
 
         self.btn_login = ctk.CTkButton(
             self.main_frame, 
@@ -87,36 +85,24 @@ class LoginKasirBaristaView(ctk.CTk):
     def handle_login(self):
         nama = self.entry_nama.get().strip()
         email = self.entry_email.get().strip()
-        telepon = self.entry_telepon.get().strip()
+        password = self.entry_password.get()
 
-        if not nama or not email or not telepon:
-            messagebox.showwarning("Peringatan", "Semua kolom data staf harus diisi!")
-            return
-
-        user = self.controller.verifikasi_login(nama, email, telepon)
+        # Controller memvalidasi input, memeriksa ke Model, dan menampilkan pesan
+        user = self.controller.verifikasi_login(nama, email, password)
 
         if user:
-            messagebox.showinfo("Sukses", f"Selamat datang, {user.get('nama_kasir', nama)}!")
-            
             # 1. Tutup jendela login
             self.destroy()
-            
-            # 2. Buka halaman orderstatus_kasir_barista_view.py secara langsung dan mulus
-            file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'orderstatus_kasir_barista_view.py'))
-            spec = importlib.util.spec_from_file_location("orderstatus_kasir_barista_view", file_path)
-            module = importlib.util.module_from_spec(spec)
-            spec.loader.exec_module(module)
-            
-            app_kasir = module.KasirOrderStatusView()
+
+            # 2. Buka panel kasir/barista
+            from views.orderstatus_kasir_barista_view import KasirOrderStatusView  # impor di sini agar tidak circular
+            app_kasir = KasirOrderStatusView()
             app_kasir.mainloop()
 
     def buka_signin(self):
         self.destroy()
-        file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'signin_kasir_barista.py'))
-        spec = importlib.util.spec_from_file_location("signin_kasir_barista", file_path)
-        module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
-        app_signin = module.KasirBaristaSigninView()
+        from views.signin_kasir_barista_view import KasirBaristaSigninView
+        app_signin = KasirBaristaSigninView()
         app_signin.mainloop()
 
 

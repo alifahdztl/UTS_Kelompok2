@@ -15,7 +15,8 @@ class Database:
                 host=self.host,
                 database=self.db_name,
                 user=self.username,
-                password=self.password
+                password=self.password,
+                autocommit=True  # tiap query membaca data terbaru; transaksi manual memakai start_transaction()
             )
             if self.conn.is_connected():
                 return self.conn

@@ -6,6 +6,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import customtkinter as ctk
 from tkinter import ttk, messagebox
 from config.database import Database
+from controllers.orderstatus_controller import OrderStatusController
 from views.pembayaran_view import PembayaranView
 
 ctk.set_appearance_mode("Dark")
@@ -17,6 +18,7 @@ class KasirBaristaOrderView(ctk.CTk):
 
         self.db = Database()
         self.conn = self.db.get_connection()
+        self.controller = OrderStatusController()
         self.selected_id = None
         self.selected_order_data = {}
 
@@ -141,6 +143,19 @@ class KasirBaristaOrderView(ctk.CTk):
             command=self.destroy
         )
         self.btn_close.pack(pady=(5, 15), padx=20, fill="x")
+        self.btn_close.pack(pady=(5, 5), padx=20, fill="x")
+
+        # ----------------- TOMBOL LOGOUT -----------------
+        self.btn_logout = ctk.CTkButton(
+            self.main_card,
+            text="Logout",
+            font=ctk.CTkFont(size=13, weight="bold"),
+            fg_color="#C0392B",
+            hover_color="#962D22",
+            height=38,
+            command=self.logout
+        )
+        self.btn_logout.pack(pady=(5, 15), padx=20, fill="x")
 
         self.load_data_pesanan()
 
@@ -170,6 +185,18 @@ class KasirBaristaOrderView(ctk.CTk):
                     row.get("tanggal_pesanan"),
                     row.get("status_pesanan")
                 ))
+        """Mengambil data pesanan melalui OrderStatusController"""
+        for item in self.tree_info.get_children():
+            self.tree_info.delete(item)
+
+        for row in self.controller.ambil_semua_pesanan():
+            self.tree_info.insert("", "end", values=(
+                row.get("id_pesanan"),
+                row.get("nomor_antrian"),
+                row.get("nama_pelanggan"),
+                row.get("tanggal_pesanan"),
+                row.get("status_pesanan")
+            ))
 
     def on_select_order(self, event):
         selected = self.tree_info.selection()
@@ -204,6 +231,22 @@ class KasirBaristaOrderView(ctk.CTk):
             
             messagebox.showinfo("Informasi", f"Status pesanan berhasil diubah menjadi '{status_baru}' di database!")
             self.load_data_pesanan()
+
+        """Memperbarui status pesanan melalui OrderStatusController"""
+        if not self.selected_id:
+            messagebox.showwarning("Peringatan", "Pilih pesanan terlebih dahulu dari tabel!")
+            return
+
+        status_baru = self.combo_status.get()
+        if self.controller.update_status_pesanan(self.selected_id, status_baru):
+            self.load_data_pesanan()
+
+    def logout(self):
+        """Menutup panel kasir dan mengembalikan pengguna ke halaman Login Kasir & Barista"""
+        self.destroy()
+        from views.login_kasir_barista_view import LoginKasirBaristaView  # impor di sini agar tidak circular
+        app_login = LoginKasirBaristaView()
+        app_login.mainloop()
 
     def buka_halaman_pembayaran(self):
         if not self.selected_order_data:

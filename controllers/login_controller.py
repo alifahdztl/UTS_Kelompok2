@@ -1,29 +1,25 @@
 from tkinter import messagebox
 from models.login_model import LoginModel
 
+
 class LoginController:
     def __init__(self):
         self.model = LoginModel()
 
-    def verifikasi_login(self, nama, email, telepon):
+    def verifikasi_login(self, nama, email, password):
         """
         Memproses validasi dan autentikasi login pelanggan.
+        Mengembalikan data pelanggan jika berhasil, atau None jika gagal.
         """
-        # Validasi field kosong
-        if not nama or not email or not telepon:
-            messagebox.showwarning("Peringatan", "Nama, Email, dan Nomor Telepon wajib diisi!")
+        if not nama or not email or not password:
+            messagebox.showwarning("Peringatan", "Nama, Email, dan Password wajib diisi!")
             return None
 
-        # Memanggil Model untuk mengambil data dari database
-        pelanggan = self.model.get_pelanggan_by_credentials(nama, email, telepon)
+        pelanggan = self.model.get_pelanggan_by_credentials(nama, email, password)
 
-        # Cek koneksi atau error dari model
-        # (Jika conn gagal, model mengembalikan None. Kita bisa handle atau cek terpisah jika ingin pesan error khusus koneksi)
-        
         if pelanggan:
-            messagebox.showinfo("Sukses", f"Login Berhasil!\nSelamat datang, {pelanggan['nama_pelanggan']}.")
+            messagebox.showinfo("Login Berhasil", f"Selamat datang, {pelanggan['nama_pelanggan']}.")
             return pelanggan
-        else:
-            # Jika pelanggan bernilai None (bisa karena salah data atau database error)
-            messagebox.showerror("Akses Ditolak", "Data tidak cocok atau gagal terhubung ke database! Hanya pelanggan terdaftar yang bisa masuk.")
-            return None
+
+        messagebox.showerror("Login Gagal", "Nama, email, atau password salah, atau gagal terhubung ke database!")
+        return None

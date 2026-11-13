@@ -15,7 +15,7 @@ class KasirBaristaSigninView(ctk.CTk):
         self.controller = KasirBaristaController()
 
         self.title("Warm Coffee - Sign In Kasir & Barista")
-        self.geometry("450x580")
+        self.geometry("450x650")
         self.resizable(False, False)
         self.configure(fg_color="#231915")
 
@@ -46,6 +46,9 @@ class KasirBaristaSigninView(ctk.CTk):
         self.entry_telepon = ctk.CTkEntry(placeholder_text="Nomor Telepon", **entry_kwargs)
         self.entry_telepon.pack(pady=8)
 
+        self.entry_password = ctk.CTkEntry(placeholder_text="Password (min. 6 karakter)", show="*", **entry_kwargs)
+        self.entry_password.pack(pady=8)
+
         self.btn_signin = ctk.CTkButton(
             self.main_frame, text="DAFTAR", font=ctk.CTkFont(size=13, weight="bold"),
             width=300, height=40, fg_color="#965829", hover_color="#7A451E", text_color="#FFFFFF", command=self.proses_signin
@@ -62,20 +65,16 @@ class KasirBaristaSigninView(ctk.CTk):
         nama = self.entry_nama.get().strip()
         email = self.entry_email.get().strip()
         telepon = self.entry_telepon.get().strip()
+        password = self.entry_password.get()
 
-        sukses = self.controller.registrasi_kasir(nama, email, telepon)
+        sukses = self.controller.registrasi_kasir(nama, email, telepon, password)
         if sukses:
             self.buka_login()
 
     def buka_login(self):
         self.destroy()
-        # Menggunakan import dinamis agar bersih dari peringatan circular Pylance di top-level
-        import importlib.util
-        file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'login_kasir_barista_view.py'))
-        spec = importlib.util.spec_from_file_location("login_kasir_barista_view", file_path)
-        module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
-        app_login = module.LoginKasirBaristaView()
+        from views.login_kasir_barista_view import LoginKasirBaristaView  # impor di sini agar tidak circular
+        app_login = LoginKasirBaristaView()
         app_login.mainloop()
 
 

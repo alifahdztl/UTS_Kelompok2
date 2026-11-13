@@ -1,13 +1,19 @@
 from config.database import Database
+from config.security import hash_password
+
 
 class LoginModel:
     def __init__(self):
         self.db = Database()
 
-    def get_pelanggan_by_credentials(self, nama, email, telepon):
+    @staticmethod
+    def hash_password(password):
+        return hash_password(password)
+
+    def get_pelanggan_by_credentials(self, nama, email, password):
         """
-        Mengambil data pelanggan dari database berdasarkan nama, email, dan nomor telepon.
-        Mengembalikan dictionary data pelanggan jika ditemukan, atau None jika tidak ada.
+        Autentikasi pelanggan: nama + email + HASH password harus cocok dengan data di database.
+        Mengembalikan dictionary data pelanggan (tanpa password) jika cocok, atau None jika tidak.
         """
         conn = self.db.get_connection()
         if not conn:
@@ -15,8 +21,11 @@ class LoginModel:
 
         try:
             cursor = conn.cursor(dictionary=True)
-            query = "SELECT * FROM pelanggan WHERE nama_pelanggan = %s AND email = %s AND nomor_telepon = %s"
-            cursor.execute(query, (nama, email, telepon))
+            query = (
+                "SELECT id_pelanggan, nama_pelanggan, nomor_telepon, email FROM pelanggan "
+                "WHERE nama_pelanggan = %s AND email = %s AND password = %s"
+            )
+            cursor.execute(query, (nama, email, self.hash_password(password)))
             pelanggan = cursor.fetchone()
 
             cursor.close()

@@ -5,7 +5,8 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import customtkinter as ctk
 from tkinter import ttk, messagebox
-import mysql.connector
+from controllers.orderstatus_controller import OrderStatusController
+from views.kelola_menu_view import KelolaMenuView 
 
 ctk.set_appearance_mode("Dark")
 
@@ -14,6 +15,7 @@ class KasirOrderStatusView(ctk.CTk):
     def __init__(self, order_data=None, pelanggan_data=None):
         super().__init__()
 
+        self.controller = OrderStatusController()
         self.order_data = order_data or {}
         self.pelanggan_data = pelanggan_data or {}
 
@@ -105,7 +107,18 @@ class KasirOrderStatusView(ctk.CTk):
             command=self.update_status_pesanan
         )
         self.btn_update_status.pack(side="left")
-
+        # Tombol Kelola Menu & Stok
+        self.jendela_menu = None
+        self.btn_kelola_menu = ctk.CTkButton(
+            self.control_frame,
+            text="Kelola Menu & Stok",
+            font=ctk.CTkFont(size=12, weight="bold"),
+            fg_color="#16A085",
+            hover_color="#117A65",
+            width=170,
+            command=self.buka_kelola_menu
+        )
+        self.btn_kelola_menu.pack(side="right")
         # Tombol Refresh Data Pesanan
         self.btn_refresh = ctk.CTkButton(
             self.main_card,
@@ -127,70 +140,45 @@ class KasirOrderStatusView(ctk.CTk):
             height=35,
             command=self.destroy
         )
-        self.btn_close.pack(pady=(5, 15), padx=20, fill="x")
+        self.btn_close.pack(pady=(5, 5), padx=20, fill="x")
 
-    def get_connection(self):
-        try:
-            return mysql.connector.connect(
-                host="localhost",
-                user="root",
-                password="",
-                database="database_sistem_informasi_pemesanan_coffe_shop"
-            )
-        except Exception as e:
-            print("Error koneksi database kasir:", e)
-            return None
+        self.btn_logout = ctk.CTkButton(
+            self.main_card,
+            text="Logout",
+            font=ctk.CTkFont(size=12, weight="bold"),
+            fg_color="#C0392B",
+            hover_color="#962D22",
+            height=35,
+            command=self.logout
+        )
+        self.btn_logout.pack(pady=(5, 15), padx=20, fill="x")
 
     def load_data_from_db(self):
-        """Mengambil data pesanan terbaru dari database MySQL"""
+        """Mengambil pesanan terbaru melalui OrderStatusController"""
         for row in self.tree_info.get_children():
             self.tree_info.delete(row)
 
-        try:
-            conn = self.get_connection()
-            if not conn:
-                return
-            cursor = conn.cursor(dictionary=True)
+        order, items = self.controller.ambil_pesanan_terakhir()
+        if not order:
+            return
 
-            cursor.execute("""
-                SELECT p.*, pl.nama_pelanggan 
-                FROM pemesanan p 
-                LEFT JOIN pelanggan pl ON p.id_pelanggan = pl.id_pelanggan 
-                ORDER BY p.id_pesanan DESC LIMIT 1
-            """)
-            order = cursor.fetchone()
+        self.order_data = order
 
-            if order:
-                self.order_data = order
-                
-                cursor.execute("""
-                    SELECT m.nama_menu, dp.jumlah AS qty 
-                    FROM detail_pesanan dp 
-                    JOIN menu m ON dp.id_menu = m.id_menu 
-                    WHERE dp.id_pesanan = %s
-                """, (order.get("id_pesanan"),))
-                items = cursor.fetchall()
+        menu_text_list = [f"{item.get('nama_menu', 'Menu')} ({item.get('qty', 1)}x)" for item in items]
+        daftar_menu_str = ", ".join(menu_text_list) if menu_text_list else "-"
 
-                menu_text_list = [f"{item.get('nama_menu', 'Menu')} ({item.get('qty', 1)}x)" for item in items]
-                daftar_menu_str = ", ".join(menu_text_list) if menu_text_list else "-"
+        nomor_antrian = order.get("nomor_antrian", "A-01")
+        nama_pelanggan = (order.get("nama_pelanggan") or "Pelanggan").title()
+        current_status = order.get("status_pesanan", "Pending")
+        total_harga = f"Rp {order.get('total_harga', 0):,}".replace(",", ".")
 
-                nomor_antrian = order.get("nomor_antrian", "A-01")
-                nama_pelanggan = (order.get("nama_pelanggan") or "Pelanggan").title()
-                current_status = order.get("status_pesanan", "Pending")
-                total_harga = f"Rp {order.get('total_harga', 0):,}".replace(",", ".")
-
-                self.tree_info.insert("", "end", iid="row_1", values=(
-                    nomor_antrian,
-                    nama_pelanggan,
-                    daftar_menu_str,
-                    current_status,
-                    total_harga
-                ))
-
-            cursor.close()
-            conn.close()
-        except Exception as e:
-            print("Error load database kasir:", e)
+        self.tree_info.insert("", "end", iid="row_1", values=(
+            nomor_antrian,
+            nama_pelanggan,
+            daftar_menu_str,
+            current_status,
+            total_harga
+        ))
 
     def update_status_pesanan(self):
         if not self.order_data or "id_pesanan" not in self.order_data:
@@ -200,26 +188,25 @@ class KasirOrderStatusView(ctk.CTk):
         status_baru = self.combo_status.get()
         pesanan_id = self.order_data.get("id_pesanan")
 
-        try:
-            conn = self.get_connection()
-            if not conn:
-                messagebox.showerror("Error", "Gagal koneksi database!")
-                return
-
-            cursor = conn.cursor()
-            cursor.execute("""
-                UPDATE pemesanan 
-                SET status_pesanan = %s 
-                WHERE id_pesanan = %s
-            """, (status_baru, pesanan_id))
-            conn.commit()
-            cursor.close()
-            conn.close()
-
+        # Controller menyimpan perubahan lewat Model dan menampilkan pesan hasilnya
+        if self.controller.update_status_pesanan(pesanan_id, status_baru):
             self.load_data_from_db()
-            messagebox.showinfo("Sukses", f"Status pesanan berhasil diubah menjadi: {status_baru}")
-        except Exception as e:
-            messagebox.showerror("Error", f"Gagal update database: {e}")
+
+    def buka_kelola_menu(self):
+        """Membuka jendela Kelola Menu & Stok tanpa menutup panel kasir."""
+        if self.jendela_menu is not None and self.jendela_menu.winfo_exists():
+            self.jendela_menu.deiconify()
+            self.jendela_menu.lift()
+            self.jendela_menu.focus_force()
+            return
+        self.jendela_menu = KelolaMenuView(self)
+        
+    def logout(self):
+        """Menutup panel kasir dan mengembalikan pengguna ke halaman Login Kasir & Barista"""
+        self.destroy()
+        from views.login_kasir_barista_view import LoginKasirBaristaView  # impor di sini agar tidak circular
+        app_login = LoginKasirBaristaView()
+        app_login.mainloop()
 
 
 if __name__ == "__main__":

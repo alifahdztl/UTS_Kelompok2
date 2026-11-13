@@ -54,6 +54,18 @@ class MenuView(ctk.CTk):
         )
         self.btn_refresh.pack(side="right", padx=20, pady=15)
 
+        self.btn_logout = ctk.CTkButton(
+            self.header_frame,
+            text="Logout",
+            font=ctk.CTkFont(size=12, weight="bold"),
+            fg_color="#C0392B",
+            hover_color="#962D22",
+            text_color="#FFFFFF",
+            width=90,
+            command=self.logout
+        )
+        self.btn_logout.pack(side="right", padx=(0, 0), pady=15)
+
         # Content Main Container (Kiri: Daftar Menu | Kanan: Keranjang & Pemesanan)
         self.content_frame = ctk.CTkFrame(self, fg_color="transparent")
         self.content_frame.pack(pady=5, padx=20, fill="both", expand=True)
@@ -139,6 +151,13 @@ class MenuView(ctk.CTk):
 
         # Load Menu dari Database via Controller
         self.muat_data_menu()
+
+    def logout(self):
+        """Menutup halaman menu dan mengembalikan pelanggan ke halaman Login"""
+        self.destroy()
+        from views.login_view import LoginView  # impor di sini agar tidak circular
+        app_login = LoginView()
+        app_login.mainloop()
 
     def muat_data_menu(self):
         """Memuat data menu dari database melalui MenuController"""

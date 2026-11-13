@@ -1,26 +1,31 @@
 from tkinter import messagebox
 from models.signin_model import SigninModel
 
+PANJANG_MINIMAL_PASSWORD = 6
+
+
 class SigninController:
     def __init__(self):
         self.model = SigninModel()
 
-    def registrasi_pelanggan(self, nama, email, telepon):
+    def registrasi_pelanggan(self, nama, email, telepon, password):
         """
         Memproses validasi dan registrasi pelanggan baru melalui SigninModel.
         Mengembalikan True jika berhasil, atau False jika gagal.
         """
-        # Validasi field kosong
-        if not nama or not email or not telepon:
-            messagebox.showwarning("Peringatan", "Nama, Email, dan Nomor Telepon wajib diisi!")
+        if not nama or not email or not telepon or not password:
+            messagebox.showwarning("Peringatan", "Nama, Email, Nomor Telepon, dan Password wajib diisi!")
             return False
 
-        # Panggil Model untuk menyimpan data ke database
-        berhasil = self.model.insert_pelanggan(nama, telepon, email)
+        if len(password) < PANJANG_MINIMAL_PASSWORD:
+            messagebox.showwarning("Peringatan", f"Password minimal {PANJANG_MINIMAL_PASSWORD} karakter!")
+            return False
+
+        berhasil = self.model.insert_pelanggan(nama, telepon, email, password)
 
         if berhasil:
             messagebox.showinfo("Sukses", "Registrasi Berhasil!\nSilakan login menggunakan data Anda.")
             return True
-        else:
-            messagebox.showerror("Error", "Gagal melakukan registrasi atau terjadi kesalahan database.")
-            return False
+
+        messagebox.showerror("Error", "Gagal melakukan registrasi atau terjadi kesalahan database.")
+        return False
