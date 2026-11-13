@@ -18,7 +18,7 @@ class SigninPelangganView(ctk.CTk):
         self.controller = SigninController()
 
         self.title("Warm Coffee - Sign In Pelanggan")
-        self.geometry("450x580")
+        self.geometry("450x580") 
         self.resizable(False, False)
         self.configure(fg_color="#231915")
 

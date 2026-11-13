@@ -1,3 +1,9 @@
+import sys
+import os
+
+# Menambahkan direktori root proyek ke sistem path agar modul 'config' terbaca
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 from config.database import Database
 
 class KasirBaristaModel:
@@ -25,3 +31,14 @@ class KasirBaristaModel:
             cursor.close()
             return True
         return False
+
+    def get_all_kasir(self):
+        """Mengambil seluruh data kasir dan barista dari database"""
+        if self.conn:
+            cursor = self.conn.cursor(dictionary=True)
+            query = f"SELECT * FROM {self.table_name}"
+            cursor.execute(query)
+            result = cursor.fetchall()
+            cursor.close()
+            return result
+        return []

@@ -3,6 +3,7 @@ from models.pelanggan_model import PelangganModel
 from models.pemesanan_model import PemesananModel
 from models.detail_pesanan_model import DetailPesananModel
 from models.pembayaran_model import PembayaranModel
+from models.kasir_barista_model import KasirBaristaModel  
 
 print("=== PENGUJIAN MODEL WARM COFFEE (BERDASARKAN DATA AKTUAL) ===\n")
 
@@ -11,7 +12,7 @@ print("--- 1. Data Menu ---")
 menu_model = MenuModel()
 daftar_menu = menu_model.get_all_menu()
 for m in daftar_menu:
-    print(f"[{m['id_menu']}] {m['nama_menu']} ({m['kategori']}) - Rp {m['harga']} | Stok: {m['stok']} | {m['status_menu']}")
+    print(f"[{m['id_menu']}] {m['nama_menu']} ({m['kategori']}) - Rp {m['harga']} | Stok: {m['stok']} | Status: {m['status_menu']}")
 
 # 2. Menguji PelangganModel
 print("\n--- 2. Data Pelanggan ---")
@@ -25,7 +26,7 @@ print("\n--- 3. Data Pemesanan ---")
 pemesanan_model = PemesananModel()
 daftar_pemesanan = pemesanan_model.get_all_pemesanan()
 for pem in daftar_pemesanan:
-    print(f"[{pem['id_pesanan']}] Pelanggan ID: {pem['id_pelanggan']} | No Antrian: {pem['nomor_antrian']} | Tanggal: {pem['tanggal_pesanan']} | Total: Rp {pem['total_harga']} | Status: {pem['status_pesanan']}")
+    print(f"[ID: {pem['id_pesanan']}] Pelanggan ID: {pem['id_pelanggan']} | No Antrian: {pem['nomor_antrian']} | Tanggal: {pem['tanggal_pesanan']} | Total: Rp {pem['total_harga']}")
 
 # 4. Menguji DetailPesananModel
 print("\n--- 4. Data Detail Pesanan ---")
@@ -39,6 +40,14 @@ print("\n--- 5. Data Pembayaran ---")
 pembayaran_model = PembayaranModel()
 daftar_pembayaran = pembayaran_model.get_all_pembayaran()
 for bayar in daftar_pembayaran:
-    print(f"[Pembayaran ID: {bayar['id_pembayaran']}] Pesanan ID: {bayar['id_pesanan']} | Metode: {bayar['metode_pembayaran']} | Bayar: Rp {bayar['jumlah_bayar']} | Kembali: Rp {bayar['kembalian']} | Status: {bayar['status_pembayaran']}")
+    print(f"[Pembayaran ID: {bayar['id_pembayaran']}] Pesanan ID: {bayar['id_pesanan']} | Metode: {bayar['metode_pembayaran']} | Bayar: Rp {bayar['jumlah_bayar']} | Kembali: Rp {bayar['kembalian']}")
+
+# 6. Menguji KasirBaristaModel
+print("\n--- 6. Data Kasir & Barista ---")
+kasir_model = KasirBaristaModel()
+daftar_kasir = kasir_model.get_all_kasir()
+for k in daftar_kasir:
+    # Hapus bagian k['id_kasir'] karena kolomnya tidak ada di database
+    print(f"{k['nama_kasir']} - {k['nomor_telepon']} - {k['email']}")
 
 print("\n=== PENGUJIAN SELESAI ===")
