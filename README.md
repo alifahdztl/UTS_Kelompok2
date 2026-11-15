@@ -21,3 +21,4 @@ UTS_Kelompok2/
 ├── pytest.ini          # Konfigurasi lingkungan unit testing Pytest
 ├── requirements.txt    # Daftar pustaka dependensi Python (termasuk customtkinter, mysql-connector, dll)
 └── test_model.py       # Berkas pengujian unit model database
+
