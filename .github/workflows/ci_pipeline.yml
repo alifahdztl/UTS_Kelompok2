@@ -1,4 +1,4 @@
-name: Python CI Pipeline - Sistem Perpustakaan
+name: Python CI Pipeline - KopiLoka
 
 on:
   push:
@@ -11,19 +11,23 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: 1. Mengambil Kode dari Repositori (Checkout)
+    - name: Mengambil Kode dari Repositori (Checkout)
       uses: actions/checkout@v4
 
-    - name: 2. Menyiapkan Lingkungan Python 3.11
+    - name: Menyiapkan Lingkungan Python 3.11
       uses: actions/setup-python@v5
       with:
         python-version: "3.11"
 
-    - name: 3. Menginstal Dependensi Proyek
+    - name: Menginstal Dependensi Proyek
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
-    - name: 4. Menjalankan Automated Unit Testing (Pytest)
+    - name: Lint code with flake8
+      run: |
+        flake8 models/ controllers/ --count --select=E9,F63,F7,F82 --show-source --statistics
+
+    - name: Menjalankan Automated Unit Testing (Pytest)
       run: |
         python -m pytest -v
