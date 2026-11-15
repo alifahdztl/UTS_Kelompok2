@@ -23,7 +23,7 @@ class KasirBaristaOrderView(ctk.CTk):
         self.selected_order_data = {}
 
         # Konfigurasi Window Kasir / Barista
-        self.title("Warm Coffee - Informasi & Status Pesanan (Kasir / Barista)")
+        self.title("KopiLoka - Informasi & Status Pesanan (Kasir / Barista)")
         self.geometry("820x540")
         self.resizable(False, False)
         self.configure(fg_color="#231915")

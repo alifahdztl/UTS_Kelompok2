@@ -17,7 +17,7 @@ class SigninPelangganView(ctk.CTk):
         # Inisialisasi Controller
         self.controller = SigninController()
 
-        self.title("Warm Coffee - Sign In Pelanggan")
+        self.title("KopiLoka - Sign In Pelanggan")
         self.geometry("450x580") 
         self.geometry("450x650")
         self.resizable(False, False)
@@ -32,7 +32,7 @@ class SigninPelangganView(ctk.CTk):
         self.label_title.pack(pady=(30, 5))
 
         self.label_subtitle = ctk.CTkLabel(
-            self.main_frame, text="Daftarkan akun member Warm Coffee Anda", font=ctk.CTkFont(size=12), text_color="#A68A78"
+            self.main_frame, text="Daftarkan akun member KopiLoka Anda", font=ctk.CTkFont(size=12), text_color="#A68A78"
         )
         self.label_subtitle.pack(pady=(0, 20))
 

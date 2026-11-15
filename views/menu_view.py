@@ -23,7 +23,7 @@ class MenuView(ctk.CTk):
         self.pelanggan_data = pelanggan_data or {"id_pelanggan": 1, "nama_pelanggan": "Pelanggan"}
 
         # Konfigurasi Window Utama
-        self.title("Warm Coffee - Order & Menu")
+        self.title("KopiLoka - Order & Menu")
         self.geometry("1000x650")
         self.resizable(False, False)
         self.configure(fg_color="#231915")
@@ -36,7 +36,7 @@ class MenuView(ctk.CTk):
 
         self.label_title = ctk.CTkLabel(
             self.header_frame,
-            text=f"WARM COFFEE - SELAMAT DATANG, {self.pelanggan_data['nama_pelanggan'].upper()}!",
+            text=f"KopiLoka - SELAMAT DATANG, {self.pelanggan_data['nama_pelanggan'].upper()}!",
             font=ctk.CTkFont(size=18, weight="bold"),
             text_color="#F5E6D3"
         )
@@ -137,6 +137,13 @@ class MenuView(ctk.CTk):
 
         self.cart_tree.pack(fill="both", expand=True, padx=10, pady=5)
 
+        # Tombol Cancel / Batalkan Item dari Keranjang
+        self.btn_cancel_item = ctk.CTkButton(
+            self.right_panel, text="Batalkan Item Dipilih", font=ctk.CTkFont(size=11, weight="bold"),
+            fg_color="#C0392B", hover_color="#962D22", height=30, command=self.batalkan_dari_keranjang
+        )
+        self.btn_cancel_item.pack(fill="x", padx=10, pady=(0, 5))
+
         # Label Total & Checkout
         self.lbl_total = ctk.CTkLabel(
             self.right_panel, text="Total: Rp 0", font=ctk.CTkFont(size=16, weight="bold"), text_color="#F5E6D3"
@@ -210,11 +217,28 @@ class MenuView(ctk.CTk):
                 "nama_menu": nama_menu,
                 "harga": harga_clean,
                 "qty": qty,
-                "subtotal": harga_clean * qty
+                "subtotal": harga_clean * qty  # Memperbaiki bug typo sebelumnya
             })
 
         self.update_keranjang_ui()
         self.entry_jumlah.delete(0, 'end')
+
+    def batalkan_dari_keranjang(self):
+        """Menghapus/membatalkan item yang dipilih di dalam tabel keranjang"""
+        selected_cart_item = self.cart_tree.selection()
+        if not selected_cart_item:
+            messagebox.showwarning("Peringatan", "Pilih item di keranjang pesanan yang ingin dibatalkan!")
+            return
+
+        # Mengambil index dari item yang dipilih di treeview keranjang
+        item_index = self.cart_tree.index(selected_cart_item[0])
+        
+        # Hapus item dari list keranjang berdasarkan index
+        if 0 <= item_index < len(self.keranjang):
+            item_dihapus = self.keranjang.pop(item_index)
+            # Perbarui UI keranjang
+            self.update_keranjang_ui()
+            messagebox.showinfo("Informasi", f"Menu '{item_dihapus['nama_menu']}' berhasil dibatalkan dari keranjang.")
 
     def update_keranjang_ui(self):
         """Update Tampilan Tabel Keranjang & Total Bayar"""

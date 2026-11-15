@@ -14,7 +14,7 @@ class KasirBaristaSigninView(ctk.CTk):
 
         self.controller = KasirBaristaController()
 
-        self.title("Warm Coffee - Sign In Kasir & Barista")
+        self.title("KopiLoka - Sign In Kasir & Barista")
         self.geometry("450x650")
         self.resizable(False, False)
         self.configure(fg_color="#231915")
@@ -28,7 +28,7 @@ class KasirBaristaSigninView(ctk.CTk):
         self.label_title.pack(pady=(30, 5))
 
         self.label_subtitle = ctk.CTkLabel(
-            self.main_frame, text="Daftarkan akun staf baru Warm Coffee", font=ctk.CTkFont(size=12), text_color="#A68A78"
+            self.main_frame, text="Daftarkan akun staf baru KopiLoka", font=ctk.CTkFont(size=12), text_color="#A68A78"
         )
         self.label_subtitle.pack(pady=(0, 20))
 

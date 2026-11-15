@@ -4,6 +4,7 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import customtkinter as ctk
+from views.logo_helper import pasang_logo, pasang_ikon
 
 ctk.set_appearance_mode("Dark")
 
@@ -14,23 +15,22 @@ class WelcomeView(ctk.CTk):
     def __init__(self):
         super().__init__()
 
-        self.title("Warm Coffee")
-        self.geometry("500x420")
+        self.title("Kopiloka")
+        self.geometry("500x460")
         self.resizable(False, False)
         self.configure(fg_color="#1e1411")
+        pasang_ikon(self)
 
         self.main_frame = ctk.CTkFrame(self, fg_color="#2b1f1a", corner_radius=20)
         self.main_frame.pack(fill="both", expand=True, padx=30, pady=30)
 
-        ctk.CTkLabel(
-            self.main_frame, text="WARM COFFEE",
-            font=ctk.CTkFont(size=26, weight="bold"), text_color="#F5E6D3"
-        ).pack(pady=(45, 8))
-
-        ctk.CTkLabel(
-            self.main_frame, text="Sistem Informasi Pemesanan Coffee Shop",
-            font=ctk.CTkFont(size=13), text_color="#D2B48C"
-        ).pack(pady=(0, 35))
+        # Logo (sudah memuat nama "KOPILOKA" dan tulisan "PEMESANAN CAFE")
+        if pasang_logo(self.main_frame, skala=2, pady=(30, 20)) is None:
+            # cadangan jika file logo tidak ditemukan
+            ctk.CTkLabel(
+                self.main_frame, text="KOPILOKA",
+                font=ctk.CTkFont(size=26, weight="bold"), text_color="#F5E6D3"
+            ).pack(pady=(45, 35))
 
         self.btn_pelanggan = ctk.CTkButton(
             self.main_frame, text="MASUK SEBAGAI PELANGGAN",

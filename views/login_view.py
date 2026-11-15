@@ -7,6 +7,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import customtkinter as ctk
 from controllers.login_controller import LoginController
 from views.menu_view import MenuView  # Ditambahkan untuk membuka halaman menu setelah login
+from views.logo_helper import pasang_logo, pasang_ikon
 
 ctk.set_appearance_mode("Dark")
 
@@ -18,14 +19,18 @@ class LoginView(ctk.CTk):
         self.controller = LoginController()
 
         # Konfigurasi Window Login
-        self.title("Warm Coffee - Login Pelanggan")
-        self.geometry("500x620")
+        self.title("Kopiloka - Login Pelanggan")
+        self.geometry("500x660")
         self.resizable(False, False)
         self.configure(fg_color="#1e1411")
+        pasang_ikon(self)
 
         # Container Utama (Kotak Panel Besar di Tengah)
         self.main_frame = ctk.CTkFrame(self, fg_color="#2b1f1a", corner_radius=20)
         self.main_frame.pack(fill="both", expand=True, padx=30, pady=30)
+
+        # Logo
+        pasang_logo(self.main_frame, skala=1, pady=(20, 0))
 
         # Header / Judul
         self.title_label = ctk.CTkLabel(
@@ -34,11 +39,11 @@ class LoginView(ctk.CTk):
             font=ctk.CTkFont(size=24, weight="bold"), 
             text_color="#F5E6D3"
         )
-        self.title_label.pack(pady=(45, 8))
+        self.title_label.pack(pady=(10, 8))
 
         self.subtitle_label = ctk.CTkLabel(
             self.main_frame, 
-            text="Masukkan data member Warm Coffee Anda", 
+            text="Masukkan data member Kopiloka Anda", 
             font=ctk.CTkFont(size=14), 
             text_color="#D2B48C"
         )

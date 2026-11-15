@@ -24,7 +24,7 @@ class KelolaMenuView(ctk.CTkToplevel):
         self.selected_id = None
         self.data_menu = []
 
-        self.title("Warm Coffee - Kelola Menu & Stok (Kasir / Barista)")
+        self.title("KopiLoka - Kelola Menu & Stok (Kasir / Barista)")
         self.geometry("900x650")
         self.resizable(False, False)
         self.configure(fg_color="#231915")

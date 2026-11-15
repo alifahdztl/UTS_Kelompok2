@@ -19,7 +19,7 @@ class PembayaranView(ctk.CTk):
         self.pelanggan_data = pelanggan_data or {}
 
         # Konfigurasi Window Pembayaran
-        self.title("Warm Coffee - Halaman Pembayaran")
+        self.title("KopiLoka - Halaman Pembayaran")
         self.geometry("550x540")
         self.resizable(False, False)
         self.configure(fg_color="#231915")

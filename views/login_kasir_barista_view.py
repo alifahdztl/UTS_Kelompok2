@@ -5,6 +5,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import customtkinter as ctk
 from controllers.kasir_barista_controller import KasirBaristaController
+from views.logo_helper import pasang_logo, pasang_ikon
 
 ctk.set_appearance_mode("Dark")
 
@@ -14,13 +15,17 @@ class LoginKasirBaristaView(ctk.CTk):
 
         self.controller = KasirBaristaController()
 
-        self.title("Warm Coffee - Login Kasir & Barista")
-        self.geometry("500x620")
+        self.title("Kopiloka - Login Kasir & Barista")
+        self.geometry("500x660")
         self.resizable(False, False)
         self.configure(fg_color="#1e1411")
+        pasang_ikon(self)
 
         self.main_frame = ctk.CTkFrame(self, fg_color="#2b1f1a", corner_radius=20)
         self.main_frame.pack(fill="both", expand=True, padx=30, pady=30)
+
+        # Logo
+        pasang_logo(self.main_frame, skala=1, pady=(20, 0))
 
         self.title_label = ctk.CTkLabel(
             self.main_frame, 
@@ -28,11 +33,11 @@ class LoginKasirBaristaView(ctk.CTk):
             font=ctk.CTkFont(size=22, weight="bold"), 
             text_color="#F5E6D3"
         )
-        self.title_label.pack(pady=(45, 8))
+        self.title_label.pack(pady=(10, 8))
 
         self.subtitle_label = ctk.CTkLabel(
             self.main_frame, 
-            text="Masukkan data akun staf Warm Coffee", 
+            text="Masukkan data akun staf Kopiloka", 
             font=ctk.CTkFont(size=14), 
             text_color="#D2B48C"
         )

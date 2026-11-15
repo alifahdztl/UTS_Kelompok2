@@ -19,7 +19,7 @@ class KasirOrderStatusView(ctk.CTk):
         self.order_data = order_data or {}
         self.pelanggan_data = pelanggan_data or {}
 
-        self.title("Warm Coffee - Order Status Kasir / Barista")
+        self.title("KopiLoka - Order Status Kasir / Barista")
         self.geometry("860x540")
         self.resizable(False, False)
         self.configure(fg_color="#1e1411")
